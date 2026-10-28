@@ -1,37 +1,75 @@
-<!doctype html>
+ <!doctype html>
   <html lang="en">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Gemini gateway test</title>
-  <style>body{font:16px/1.45
-  system-ui,sans-serif;margin:1.5rem;max-width:40rem}input,button{font:inhe
-  rit;width:100%;box-sizing:border-box;margin:.4rem
-  0;padding:.7rem}button{font-weight:600}#out{word-break:break-all;color:#5
-  55;font-size:.85rem}</style>
-  <h1>Gemini gateway test</h1>
-  <input id="p" value="Say WHLANE-GATEWAY-OK">
-  <button id="anim">Gateway — MainAssistantDeeplinkAnimated</button>
-  <button id="plain">Gateway — MainAssistantDeeplink</button>
+  <title>Gemini intent test</title>
+  <style>
+    body { font: 16px/1.45 system-ui, sans-serif; margin: 1.5rem;
+  max-width: 40rem; }
+    input, button { font: inherit; width: 100%; box-sizing: border-box;
+  margin: .4rem 0; padding: .7rem; }
+    button { font-weight: 600; }
+    #out { word-break: break-all; color: #555; font-size: .85rem; }
+    .hint { color: #666; font-size: .9rem; }
+  </style>
+
+  <h1>Gemini intent test</h1>
+
+  <p>Prompt sent as the <code>auto_submit_prompt</code> Intent extra:</p>
+  <input id="p" value="Say WHLANE-SMS-OK">
+
+  <button id="go-package">Open Gemini — auto-submit (package)</button>
+  <button id="go-component">Open Gemini — auto-submit (component)</button>
+  <button id="prefill">Control — prefilled_prompt (needs a Send
+  tap)</button>
+
+  <p class="hint">A real tap is required. Loading the page alone does
+  nothing: Chrome requires user activation for external-intent navigation.
+  The last URI fired is printed below.</p>
   <p id="out"></p>
+
   <script>
   const PKG = "com.google.android.googlequicksearchbox";
-  const BASE = PKG + "/com.google.android.apps.search.assistant.surfaces.vo
-  ice.deeplinks.handlers.gateway.impl.";
-  function uri(component, prompt) {
+  const COMPONENT = "com.google.android.googlequicksearchbox/"
+    + "com.google.android.apps.search.assistant.surfaces.voice."
+    + "deeplinks.handlers.gateway.impl.MainAssistantDeeplinkAnimated";
+
+  function intentUriWithPackage(prompt) {
     return "intent://gemini.google.com/app#Intent;scheme=https;"
-         + "component=" + component + ";"
+         + "package=" + PKG + ";"
          + "action=android.intent.action.VIEW;"
          + "category=android.intent.category.BROWSABLE;"
          + "S.auto_submit_prompt=" + encodeURIComponent(prompt) + ";end";
   }
-  function fire(component) {
-    const u = uri(component, document.getElementById("p").value);
-    document.getElementById("out").textContent = u;
-    location.href = u;
+
+  function intentUriWithComponent(prompt) {
+    return "intent://gemini.google.com/app#Intent;scheme=https;"
+         + "component=" + COMPONENT + ";"
+         + "action=android.intent.action.VIEW;"
+         + "category=android.intent.category.BROWSABLE;"
+         + "S.auto_submit_prompt=" + encodeURIComponent(prompt) + ";end";
   }
-  document.getElementById("anim").onclick = () => fire(BASE +
-  "MainAssistantDeeplinkAnimated");
-  document.getElementById("plain").onclick = () => fire(BASE +
-  "MainAssistantDeeplink");
+
+  function fire(uri) {
+    document.getElementById("out").textContent = uri;
+    location.href = uri;
+  }
+
+  document.getElementById("go-package").addEventListener("click", function
+  () {
+    fire(intentUriWithPackage(document.getElementById("p").value));
+  });
+
+  document.getElementById("go-component").addEventListener("click",
+  function () {
+    fire(intentUriWithComponent(document.getElementById("p").value));
+  });
+
+  document.getElementById("prefill").addEventListener("click", function ()
+  {
+    const prompt = document.getElementById("p").value;
+    fire("https://gemini.google.com/app?prefilled_prompt=" +
+  encodeURIComponent(prompt));
+  });
   </script>
   </html>
