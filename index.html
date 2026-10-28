@@ -1,49 +1,37 @@
 <!doctype html>
-<html lang="en">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gemini intent test</title>
-<style>
-  body { font: 16px/1.45 system-ui, sans-serif; margin: 1.5rem; max-width: 40rem; }
-  input, button { font: inherit; width: 100%; box-sizing: border-box; margin: .4rem 0; padding: .7rem; }
-  button { font-weight: 600; }
-  #out { word-break: break-all; color: #555; font-size: .85rem; }
-  .hint { color: #666; font-size: .9rem; }
-</style>
-
-<h1>Gemini intent test</h1>
-
-<p>Prompt sent as the <code>auto_submit_prompt</code> Intent extra:</p>
-<input id="p" value="Say WHLANE-SMS-OK">
-
-<button id="go">Open Gemini — auto-submit</button>
-<button id="prefill">Control — prefilled_prompt (needs a Send tap)</button>
-
-<p class="hint">The last URI fired is printed below.</p>
-<p id="out"></p>
-
-<script>
-const PKG = "com.google.android.googlequicksearchbox";
-
-function intentUri(prompt) {
-  return "intent://gemini.google.com/app#Intent;scheme=https;"
-       + "package=" + PKG + ";"
-       + "action=android.intent.action.VIEW;"
-       + "category=android.intent.category.BROWSABLE;"
-       + "S.auto_submit_prompt=" + encodeURIComponent(prompt) + ";end";
-}
-
-document.getElementById("go").addEventListener("click", function () {
-  const uri = intentUri(document.getElementById("p").value);
-  document.getElementById("out").textContent = uri;
-  location.href = uri;
-});
-
-document.getElementById("prefill").addEventListener("click", function () {
-  const uri = "https://gemini.google.com/app?prefilled_prompt="
-            + encodeURIComponent(document.getElementById("p").value);
-  document.getElementById("out").textContent = uri;
-  location.href = uri;
-});
-</script>
-</html>
+  <html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gemini gateway test</title>
+  <style>body{font:16px/1.45
+  system-ui,sans-serif;margin:1.5rem;max-width:40rem}input,button{font:inhe
+  rit;width:100%;box-sizing:border-box;margin:.4rem
+  0;padding:.7rem}button{font-weight:600}#out{word-break:break-all;color:#5
+  55;font-size:.85rem}</style>
+  <h1>Gemini gateway test</h1>
+  <input id="p" value="Say WHLANE-GATEWAY-OK">
+  <button id="anim">Gateway — MainAssistantDeeplinkAnimated</button>
+  <button id="plain">Gateway — MainAssistantDeeplink</button>
+  <p id="out"></p>
+  <script>
+  const PKG = "com.google.android.googlequicksearchbox";
+  const BASE = PKG + "/com.google.android.apps.search.assistant.surfaces.vo
+  ice.deeplinks.handlers.gateway.impl.";
+  function uri(component, prompt) {
+    return "intent://gemini.google.com/app#Intent;scheme=https;"
+         + "component=" + component + ";"
+         + "action=android.intent.action.VIEW;"
+         + "category=android.intent.category.BROWSABLE;"
+         + "S.auto_submit_prompt=" + encodeURIComponent(prompt) + ";end";
+  }
+  function fire(component) {
+    const u = uri(component, document.getElementById("p").value);
+    document.getElementById("out").textContent = u;
+    location.href = u;
+  }
+  document.getElementById("anim").onclick = () => fire(BASE +
+  "MainAssistantDeeplinkAnimated");
+  document.getElementById("plain").onclick = () => fire(BASE +
+  "MainAssistantDeeplink");
+  </script>
+  </html>
